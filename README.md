@@ -8,6 +8,7 @@ A real-time check-in/out system for construction site workers. This project prov
 - **Live Dashboard**: Supervisors can view a real-time list of workers currently on site
 - **Historical Records**: All check-in/out events are recorded and can be filtered by worker, date range, or both
 - **Real-time Updates**: Dashboard updates instantly when workers check in or out
+- **Emergency Activation**: Supervisors can activate an emergency button that alerts checked-in workers to leave immediately, while preventing workers who are checked out from checking in. This security feature enhances site safety during emergencies.
 
 ## How to Run the Project
 
@@ -20,7 +21,7 @@ A real-time check-in/out system for construction site workers. This project prov
 
 1. Clone the repository:
    ```
-   git clone https://github.com/your-username/civalgo-punch.git
+   git clone git@github.com:nickdesjardins/civalgo-punch.git
    cd civalgo-punch
    ```
 
@@ -29,67 +30,18 @@ A real-time check-in/out system for construction site workers. This project prov
    npm install
    ```
 
-3. Set up your Supabase database:
-   - Create a new Supabase project
-   - Set up the database schema and seed data using one of the following methods:
-   
-   #### Option 1: Using the Setup Script (Recommended)
-   
-   1. First, run the pgclient setup file manually:
-      - Go to your Supabase project dashboard
-      - Open the SQL Editor
-      - Create a new query
-      - Copy the contents of `supabase/migrations/00_setup_pgclient.sql`
-      - Execute the query
-   
-   2. Run the database setup script:
-      ```
-      npm run setup:db
-      ```
-      This will:
-      - Create all required tables and indexes
-      - Set up row-level security policies
-      - Populate the database with test data
-   
-   > **Security Note**: The pgclient function grants significant power to the anonymous role. For a production environment, you should either remove it after setup or restrict it to admin users only.
-   
-   #### Option 2: Using the Supabase Web Interface
-   
-   1. Log in to your Supabase project dashboard
-   2. Go to the SQL Editor tab
-   3. Create a new query
-   4. Copy the contents of the migration file `supabase/migrations/01_create_tables.sql`
-   5. Execute the query
-   6. Repeat steps 3-5 for the seed file `supabase/seed/01_seed_data.sql`
-   
-   #### Option 3: Using the Supabase CLI
-   
-   1. Install the Supabase CLI: https://supabase.com/docs/guides/cli
-   2. Login to your Supabase account:
-      ```
-      supabase login
-      ```
-   3. Link your project:
-      ```
-      supabase link --project-ref <your-project-id>
-      ```
-   4. Run the migrations and seed scripts:
-      ```
-      supabase db push
-      ```
-
-4. Create a `.env.local` file with your Supabase credentials:
+3. Create a `.env.local` file with your Supabase credentials:
    ```
-   NEXT_PUBLIC_SUPABASE_URL=your-supabase-project-url
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+   NEXT_PUBLIC_SUPABASE_URL=included-in-email
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=included-in-email
    ```
 
-5. Run the development server:
+4. Run the development server:
    ```
    npm run dev
    ```
 
-6. Open [http://localhost:3000](http://localhost:3000) in your browser
+5. Open [http://localhost:3000](http://localhost:3000) in your browser
 
 ## Database Schema
 
@@ -99,10 +51,20 @@ A real-time check-in/out system for construction site workers. This project prov
 - `site_id`: UUID (foreign key to sites table)
 - `created_at`: Timestamp (when the worker was created)
 
+### Worker State
+- `id`: UUID (unique identifier for the worker state record)
+- `worker_id`: UUID (foreign key referencing the workers table)
+- `site_id`: UUID (foreign key referencing the sites table)
+- `is_checked_in`: Bool (indicates whether the worker is currently checked in)
+- `last_check_in`: Timestamp (timestamp of the worker's last check-in)
+- `last_check_out`: Timestamp (timestamp of the worker's last check-out)
+- `updated_at`: Timestamp (timestamp when the record was last updated)
+
 ### Sites Table
 - `id`: UUID (primary key)
 - `name`: String (site name)
 - `created_at`: Timestamp (when the site was created)
+- `emergency`: Boolean (if an emergency alert is active on site)
 
 ### Check-In Events Table
 - `id`: UUID (primary key)
@@ -142,7 +104,6 @@ The seed file creates:
 
 ### State Management
 - **React Hook Form**: For form handling with validation
-- **Zod**: For type validation
 - **Supabase Realtime**: For updating the dashboard in real-time
 
 ### Real-time Updates
